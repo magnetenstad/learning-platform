@@ -49,6 +49,7 @@ const questionSchema = z.object({
   question: z.string().min(1).max(400),
   correctAnswer: z.string().min(1).max(400).optional(),
   userAnswer: z.string().min(1).max(400),
+  subject: z.string().optional(),
 });
 
 export const generateQuestionPrompt = (body: unknown) => {
@@ -66,6 +67,7 @@ export const generateQuestionPrompt = (body: unknown) => {
       !data.question.includes('?'));
 
   return `Grade my answer as correct, somewhat correct or incorrect. Explain any mistakes in my answer. Did I forget anything? What is important to know about to answer this question? 
+${data.subject ? `On the subject of ${data.subject}` : ''}
 ${isStatement ? 'Statement' : 'Question'}: "${data.question}"
 ${data.correctAnswer ? `Professor's solution: "${data.correctAnswer}"` : ''}
 My answer: "${data.userAnswer}"`;
