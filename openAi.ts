@@ -52,7 +52,7 @@ const questionSchema = z.object({
   subject: z.string().optional(),
 });
 
-export const generateQuestionPrompt = (body: unknown) => {
+export const generateGradePrompt = (body: unknown) => {
   const parsed = questionSchema.safeParse(body);
 
   if (!parsed.success) {
@@ -71,4 +71,21 @@ ${data.subject ? `On the subject of ${data.subject}` : ''}
 ${isStatement ? 'Statement' : 'Question'}: "${data.question}"
 ${data.correctAnswer ? `Professor's solution: "${data.correctAnswer}"` : ''}
 My answer: "${data.userAnswer}"`;
+};
+
+const subjectSchema = z.object({
+  subject: z.string(),
+});
+
+export const generateQuestionListPrompt = (body: unknown) => {
+  const parsed = subjectSchema.safeParse(body);
+
+  if (!parsed.success) {
+    console.error(parsed.error);
+    return null;
+  }
+
+  const data = parsed.data;
+
+  return `I am studying for an exam about ${data}. Generate a list of 10 appropriate questions I should practice on.`;
 };

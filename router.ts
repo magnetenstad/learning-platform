@@ -1,5 +1,9 @@
 import { Router } from 'https://deno.land/x/oak@v12.4.0/mod.ts';
-import { generateQuestionPrompt, requestGpt } from './openAi.ts';
+import {
+  generateGradePrompt,
+  generateQuestionListPrompt,
+  requestGpt,
+} from './openAi.ts';
 
 export const router = new Router();
 
@@ -9,19 +13,30 @@ router.get('/', (ctx) => {
   ctx.response.body = 'Hello world!';
 });
 
-router.post('/question', async (ctx) => {
-  console.log('Request for /question');
+router.post('/grade', async (ctx) => {
+  console.log('Request for /grade');
 
   const body = JSON.parse(await ctx.request.body().value);
 
-  const prompt = generateQuestionPrompt(body);
+  const prompt = generateGradePrompt(body);
   if (!prompt) {
     ctx.response.status = 400;
-    ctx.response.body = {
-      error: {
-        message: 'Please provide question, correctAnswer and userAnswer',
-      },
-    };
+    console.warn('Failed');
+    return;
+  }
+  const result = await requestGpt(prompt);
+  ctx.response.body = JSON.stringify({ result: result.result });
+  ctx.response.status = result.status;
+});
+
+router.post('/question-list', async (ctx) => {
+  console.log('Request for /question-list');
+
+  const body = JSON.parse(await ctx.request.body().value);
+
+  const prompt = generateQuestionListPrompt(body);
+  if (!prompt) {
+    ctx.response.status = 400;
     console.warn('Failed');
     return;
   }
