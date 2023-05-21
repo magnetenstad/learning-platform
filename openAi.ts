@@ -87,5 +87,5 @@ export const generateQuestionListPrompt = (body: unknown) => {
 
   const data = parsed.data;
 
-  return `I am studying for an exam about ${data}. Generate a list of 10 appropriate questions I should practice on.`;
+  return `I am studying for an exam about ${data.subject}. Generate a list of 10 appropriate questions I should practice on.`;
 };
