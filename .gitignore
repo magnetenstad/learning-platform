@@ -1,3 +1,5 @@
 thunder-tests
 .env
 *.pdf
+*.txt
+__pycache__

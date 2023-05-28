@@ -6,14 +6,16 @@ regex = "[1-9][0-9]*\\.([1-9][0-9]*\\.)*[1-9][0-9]* .+"
 
 def is_successor(key, key_prev):
     for i in range(min(len(key), len(key_prev))):
-        if key[i] == key_prev[i] + 1:
+        if key[i] > key_prev[i]:
             return True
-    return False
+        if key[i] != key_prev[i]:
+            return False
+    return len(key) > len(key_prev)
 
 
 def text_to_sections(text: str):
     sections = []
-    key_prev = (0, 0)
+    key_prev = (0,)
     for line in text.split("\n"):
         if match(regex, line):
             key, section = line.split(" ", 1)
@@ -29,7 +31,7 @@ def text_to_sections(text: str):
     return sections
 
 
-def sections_to_section_contents(sections):
+def sections_to_section_contents(text, sections):
     sections_plaintext = [
         "\\.".join([str(x) for x in key]) + " " + value for key, value in sections
     ]
@@ -53,7 +55,14 @@ def sections_to_section_contents(sections):
 
 def text_to_section_contents(text: str):
     sections = text_to_sections(text)
-    return sections, sections_to_section_contents(sections)
+    return sections, sections_to_section_contents(text, sections)
+
+
+def section_contents_to_file(sections, contents, filename):
+    with open(filename, "w", encoding="utf-8") as file:
+        for key, section in sections:
+            file.write(f"\n{key} {section}\n\n")
+            file.write(contents[key])
 
 
 if __name__ == "__main__":
@@ -72,7 +81,4 @@ if __name__ == "__main__":
 
     if len(argv) > 2:
         dest = argv[2]
-        with open(dest, "w", encoding="utf-8") as file:
-            for key, section in sections:
-                file.write(f"\n{key} {section}\n\n")
-                file.write(contents[key])
+        section_contents_to_file(sections, contents, dest)
