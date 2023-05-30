@@ -1,5 +1,8 @@
 import { OpenAI } from 'https://deno.land/x/openai@1.3.4/mod.ts';
 import { z } from 'https://deno.land/x/zod@v3.16.1/mod.ts';
+import { config } from 'https://deno.land/x/dotenv@v3.2.2/mod.ts';
+
+config({ export: true });
 
 const openai = new OpenAI(Deno.env.get('OPENAI_API_KEY')!);
 
