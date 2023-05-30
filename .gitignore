@@ -2,4 +2,5 @@ thunder-tests
 .env
 *.pdf
 *.txt
+assets/**/*.md
 __pycache__

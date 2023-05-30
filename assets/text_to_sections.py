@@ -1,5 +1,6 @@
 from re import match
 from sys import argv
+from os import mkdir, path
 
 regex = "[1-9][0-9]*\\.([1-9][0-9]*\\.)*[1-9][0-9]* .+"
 
@@ -58,10 +59,14 @@ def text_to_section_contents(text: str):
     return sections, sections_to_section_contents(text, sections)
 
 
-def section_contents_to_file(sections, contents, filename):
-    with open(filename, "w", encoding="utf-8") as file:
-        for key, section in sections:
-            file.write(f"\n{key} {section}\n\n")
+def section_contents_to_dir(sections, contents, dirname):
+    if not path.exists(dirname):
+        mkdir(dirname)
+
+    for key, section in sections:
+        filename = dirname + "/" + ".".join([str(x) for x in key]) + ".md"
+        with open(filename, "w", encoding="utf-8") as file:
+            file.write(f"# {key} {section}\n\n")
             file.write(contents[key])
 
 
@@ -81,4 +86,4 @@ if __name__ == "__main__":
 
     if len(argv) > 2:
         dest = argv[2]
-        section_contents_to_file(sections, contents, dest)
+        section_contents_to_dir(sections, contents, dest)
