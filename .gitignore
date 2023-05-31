@@ -4,3 +4,4 @@ thunder-tests
 *.txt
 assets/**/*.md
 __pycache__
+!assets/books/example/**
