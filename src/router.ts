@@ -44,3 +44,31 @@ router.post('/question-list', async (ctx) => {
   ctx.response.body = JSON.stringify({ result: result.result });
   ctx.response.status = result.status;
 });
+
+router.get('/bookshelf', async (ctx) => {
+  const books = [];
+  for await (const book of Deno.readDir('./assets/books')) {
+    books.push(book.name);
+  }
+  ctx.response.body = JSON.stringify({ books: books });
+});
+
+router.get('/book/:book', async (ctx) => {
+  const chapters = [];
+  const book = ctx.params.book;
+
+  for await (const chapter of Deno.readDir(`./assets/books/${book}`)) {
+    chapters.push(chapter.name);
+  }
+  ctx.response.body = JSON.stringify({ chapters: chapters });
+  return;
+});
+
+router.get('/book/:book/chapter/:chapter', async (ctx) => {
+  const book = ctx.params.book;
+  const chapter = ctx.params.chapter;
+
+  const text = await Deno.readTextFile(`./assets/books/${book}/${chapter}`);
+  ctx.response.body = JSON.stringify({ text });
+  return;
+});
