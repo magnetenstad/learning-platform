@@ -1,9 +1,5 @@
 import { Router } from 'https://deno.land/x/oak@v12.4.0/mod.ts';
-import {
-  generateGradePrompt,
-  generateQuestionListPrompt,
-  requestGpt,
-} from './openAi.ts';
+import { requestGrade, requestQuestionList } from './openAi.ts';
 
 export const router = new Router();
 
@@ -16,33 +12,34 @@ router.get('/', (ctx) => {
 router.post('/grade', async (ctx) => {
   console.log('Request for /grade');
 
-  const body = JSON.parse(await ctx.request.body().value);
+  const body =
+    ctx.request.body().type === 'json'
+      ? await ctx.request.body().value
+      : JSON.parse(await ctx.request.body().value);
 
-  const prompt = generateGradePrompt(body);
-  if (!prompt) {
+  const result = await requestGrade(body);
+  if (!result) {
     ctx.response.status = 400;
     console.warn('Failed');
     return;
   }
-  const result = await requestGpt(prompt);
-  ctx.response.body = JSON.stringify({ result: result.result });
-  ctx.response.status = result.status;
+  ctx.response.body = JSON.stringify(result);
 });
 
 router.post('/question-list', async (ctx) => {
   console.log('Request for /question-list');
+  const body =
+    ctx.request.body().type === 'json'
+      ? await ctx.request.body().value
+      : JSON.parse(await ctx.request.body().value);
 
-  const body = JSON.parse(await ctx.request.body().value);
-
-  const prompt = generateQuestionListPrompt(body);
-  if (!prompt) {
+  const result = await requestQuestionList(body);
+  if (!result) {
     ctx.response.status = 400;
     console.warn('Failed');
     return;
   }
-  const result = await requestGpt(prompt);
-  ctx.response.body = JSON.stringify({ result: result.result });
-  ctx.response.status = result.status;
+  ctx.response.body = JSON.stringify(result);
 });
 
 router.get('/bookshelf', async (ctx) => {
@@ -50,7 +47,7 @@ router.get('/bookshelf', async (ctx) => {
   for await (const book of Deno.readDir('./assets/books')) {
     books.push(book.name);
   }
-  ctx.response.body = JSON.stringify({ books: books });
+  ctx.response.body = JSON.stringify({ books });
 });
 
 router.get('/book/:book', async (ctx) => {
@@ -60,7 +57,7 @@ router.get('/book/:book', async (ctx) => {
   for await (const chapter of Deno.readDir(`./assets/books/${book}`)) {
     chapters.push(chapter.name);
   }
-  ctx.response.body = JSON.stringify({ chapters: chapters });
+  ctx.response.body = JSON.stringify({ chapters });
   return;
 });
 
