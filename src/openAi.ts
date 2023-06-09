@@ -6,13 +6,13 @@ import {
   gen,
   system,
   createOpenAIChatCompletion,
-} from 'npm:salutejs';
+} from './salute/src/index.ts';
 
 config({ export: true });
 
 const gpt3 = createOpenAIChatCompletion(
   { model: 'gpt-3.5-turbo' },
-  { apiKey: Deno.env.get('OPENAI_API_KEY') }
+  Deno.env.get('OPENAI_API_KEY')!
 );
 
 const questionSchema = z.object({
