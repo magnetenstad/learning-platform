@@ -1,5 +1,5 @@
-import { Router } from 'https://deno.land/x/oak@v12.4.0/mod.ts';
-import { requestGrade, requestQuestionList } from './openAi.ts';
+import { Router, RouterContext } from 'https://deno.land/x/oak@v12.4.0/mod.ts';
+import { requestGrade, requestHint, requestQuestionList } from './openAi.ts';
 
 export const router = new Router();
 
@@ -9,37 +9,37 @@ router.get('/', (ctx) => {
   ctx.response.body = 'Hello world!';
 });
 
-router.post('/grade', async (ctx) => {
-  console.log('Request for /grade');
+const requestGpt = async (
+  url: string,
+  requestFunc: (body: unknown) => Promise<unknown>,
+  ctx: RouterContext<any, any, any>
+) => {
+  console.log(`Request for ${url}`);
 
   const body =
     ctx.request.body().type === 'json'
       ? await ctx.request.body().value
       : JSON.parse(await ctx.request.body().value);
 
-  const result = await requestGrade(body);
+  const result = await requestFunc(body);
   if (!result) {
     ctx.response.status = 400;
     console.warn('Failed');
     return;
   }
   ctx.response.body = JSON.stringify(result);
+};
+
+router.post('/grade', async (ctx) => {
+  await requestGpt('/grade', requestGrade, ctx);
 });
 
 router.post('/question-list', async (ctx) => {
-  console.log('Request for /question-list');
-  const body =
-    ctx.request.body().type === 'json'
-      ? await ctx.request.body().value
-      : JSON.parse(await ctx.request.body().value);
+  await requestGpt('/question-list', requestQuestionList, ctx);
+});
 
-  const result = await requestQuestionList(body);
-  if (!result) {
-    ctx.response.status = 400;
-    console.warn('Failed');
-    return;
-  }
-  ctx.response.body = JSON.stringify(result);
+router.post('/hint', async (ctx) => {
+  await requestGpt('/hint', requestHint, ctx);
 });
 
 router.get('/bookshelf', async (ctx) => {

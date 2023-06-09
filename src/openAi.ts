@@ -39,12 +39,14 @@ export const requestGrade = async (body: unknown) => {
     assistant`${params.question}`,
     data.correctAnswer
       ? system`The solution is ${data.correctAnswer}`
-      : system`As a professer, you know the correct solution.`,
+      : system`As the professer, you know the correct solution.`,
     user`${data.userAnswer}`,
-    user`Grade my answer as correct, somewhat correct or incorrect. Explain any mistakes in my answer. Did I forget anything? What is important to know about to answer this question?`,
+    user`Grade my answer as correct, somewhat correct or incorrect.`,
     assistant`Your answer is ${gen('correctness', {
       maxTokens: 2,
-    })}. ${gen('comment', { maxTokens: 150 })}`,
+    })}.`,
+    user`Explain any mistakes in my answer. Did I forget anything? What is important to know about to answer this question?`,
+    assistant`${gen('comment', { maxTokens: 150 })}`,
   ]);
 
   return (await agent(data)) as { grade: string; comment: string };
@@ -91,5 +93,31 @@ export const requestQuestionList = async (body: unknown) => {
     8: string;
     9: string;
     10: string;
+  };
+};
+
+const hintSchema = z.object({
+  subject: z.string(),
+  question: z.string(),
+});
+
+type HintSchema = z.infer<typeof hintSchema>;
+
+export const requestHint = async (body: unknown) => {
+  const parsed = hintSchema.safeParse(body);
+
+  if (!parsed.success) {
+    console.error(parsed.error);
+    return null;
+  }
+
+  const data = parsed.data;
+  const agent = gpt3(({ params }: { params: HintSchema }) => [
+    system`You are a concise but helpful professor in ${params.subject}. The user is one of your students and is currently taking your test.`,
+    user`Can you give me a short hint for the following question? ${params.question}Do not reveal the complete answer!`,
+    assistant`${gen('hint', { maxTokens: 25 })}`,
+  ]);
+  return (await agent(data)) as {
+    hint: string;
   };
 };
