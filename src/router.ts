@@ -1,5 +1,10 @@
 import { Router, RouterContext } from 'https://deno.land/x/oak@v12.4.0/mod.ts';
-import { requestGrade, requestHint, requestQuestionList } from './openAi.ts';
+import {
+  requestChapterQuestion,
+  requestGrade,
+  requestHint,
+  requestQuestionList,
+} from './openAi.ts';
 
 export const router = new Router();
 
@@ -40,6 +45,10 @@ router.post('/question-list', async (ctx) => {
 
 router.post('/hint', async (ctx) => {
   await requestGpt('/hint', requestHint, ctx);
+});
+
+router.post('/chapter-question', async (ctx) => {
+  await requestGpt('/hint', requestChapterQuestion, ctx);
 });
 
 router.get('/bookshelf', async (ctx) => {

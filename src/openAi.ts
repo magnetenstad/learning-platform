@@ -32,15 +32,13 @@ export const requestGrade = async (body: unknown) => {
     return null;
   }
 
-  const data = parsed.data;
-
   const agent = gpt3(({ params }: { params: QuestionSchema }) => [
     system`You are a concise but helpful professor in ${params.subject}. The user is one of your students and is currently taking your test. First, you will ask a question or give a statement. Second, the user will answer to their ability. Finally, you will review their answer in under 4 sentences. No subtitles.`,
     assistant`${params.question}`,
-    data.correctAnswer
-      ? system`The solution is ${data.correctAnswer}`
+    params.correctAnswer
+      ? system`The solution is ${params.correctAnswer}`
       : system`As the professer, you know the correct solution.`,
-    user`${data.userAnswer}`,
+    user`${params.userAnswer}`,
     user`Grade my answer as correct, somewhat correct or incorrect.`,
     assistant`Your answer is ${gen('correctness', {
       maxTokens: 2,
@@ -49,7 +47,7 @@ export const requestGrade = async (body: unknown) => {
     assistant`${gen('comment', { maxTokens: 150 })}`,
   ]);
 
-  return (await agent(data)) as { grade: string; comment: string };
+  return (await agent(parsed.data)) as { grade: string; comment: string };
 };
 
 const subjectSchema = z.object({
@@ -66,7 +64,6 @@ export const requestQuestionList = async (body: unknown) => {
     return null;
   }
 
-  const data = parsed.data;
   const maxTokens = 25;
   const agent = gpt3(({ params }: { params: SubjectSchema }) => [
     user`I am studying for an exam about ${params.subject}. Generate a list of short and appropriate questions I should practice on.`,
@@ -82,7 +79,7 @@ export const requestQuestionList = async (body: unknown) => {
       { maxTokens }
     )}`,
   ]);
-  return (await agent(data)) as {
+  return (await agent(parsed.data)) as {
     1: string;
     2: string;
     3: string;
@@ -111,13 +108,75 @@ export const requestHint = async (body: unknown) => {
     return null;
   }
 
-  const data = parsed.data;
   const agent = gpt3(({ params }: { params: HintSchema }) => [
     system`You are a concise but helpful professor in ${params.subject}. The user is one of your students and is currently taking your test.`,
     user`Can you give me a short hint for the following question? ${params.question}Do not reveal the complete answer!`,
     assistant`${gen('hint', { maxTokens: 25 })}`,
   ]);
-  return (await agent(data)) as {
+  return (await agent(parsed.data)) as {
     hint: string;
+  };
+};
+
+const chapterSchema = z.object({
+  subject: z.string(),
+  book: z.string(),
+  chapter: z.string(),
+  text: z.string().optional(),
+});
+
+type ChapterSchema = z.infer<typeof chapterSchema>;
+
+export const requestChapterQuestion = async (body: unknown) => {
+  const parsed = chapterSchema.safeParse(body);
+
+  if (!parsed.success) {
+    console.error(parsed.error);
+    return null;
+  }
+  parsed.data.text = await Deno.readTextFile(
+    `./assets/books/${parsed.data.book}/${parsed.data.chapter}`
+  );
+
+  const agent = gpt3(({ params }: { params: ChapterSchema }) => [
+    system`You are a professor in ${
+      params.subject
+    }. Create a single short question from the following chapter of ${
+      params.book
+    }. \n\n ${params.text ?? ''}`,
+    assistant`${gen('question', {
+      maxTokens: 25,
+    })}`,
+    system`State a correct answer to the question you provided, in one short sentence.`,
+    assistant`The correct answer is ${gen('correctChoice', { maxTokens: 10 })}`,
+    system`State an incorrect answer to the question you provided.`,
+    assistant`An incorrect answer could be ${gen('choice2', {
+      maxTokens: 10,
+    })}`,
+    system`State another incorrect answer to the question you provided.`,
+    assistant`An incorrect answer could be ${gen('choice3', {
+      maxTokens: 10,
+    })}`,
+    system`State another incorrect answer to the question you provided.`,
+    assistant`An incorrect answer could be ${gen('choice4', {
+      maxTokens: 10,
+    })}`,
+  ]);
+  const result = (await agent(parsed.data)) as {
+    question: string;
+    correctChoice: string;
+    choice2: string;
+    choice3: string;
+    choice4: string;
+  };
+  return {
+    question: result.question,
+    options: [
+      result.correctChoice,
+      result.choice2,
+      result.choice3,
+      result.choice4,
+    ].sort(() => Math.random() - 0.5),
+    correctAnswer: result.correctChoice,
   };
 };
