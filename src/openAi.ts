@@ -66,7 +66,7 @@ export const requestQuestionList = async (body: unknown) => {
 
   const maxTokens = 25;
   const agent = gpt3(({ params }: { params: SubjectSchema }) => [
-    user`I am studying for an exam about ${params.subject}. Generate a list of short and appropriate questions I should practice on.`,
+    user`I am studying for an exam about ${params.subject}. Generate a list of 10 short and appropriate questions I should practice on.`,
     assistant`1) ${gen('1', { maxTokens })}\n2) ${gen('2', {
       maxTokens,
     })}\n3) ${gen('3', { maxTokens })}\n4) ${gen('4', {
