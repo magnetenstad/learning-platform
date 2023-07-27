@@ -12,8 +12,6 @@ def read_convert_write(source, dest):
 
 
 if __name__ == "__main__":
-    # read_convert_write("bio-alg.pdf", "bio-alg.txt")
-    read_convert_write("par-prog.pdf", "books/par-prog")
     if len(argv) < 3:
         print("args: <source> <dest>")
         exit(1)
