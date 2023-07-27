@@ -195,6 +195,7 @@ const requestChapterQuestion = async (chapter: ChapterSchema) => {
     choice4: string;
   };
   return {
+    // id: crypto.randomUUID(),
     question: result.question,
     choices: [
       result.correctChoice,

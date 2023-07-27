@@ -5,3 +5,4 @@ thunder-tests
 assets/**/*.md
 __pycache__
 !assets/books/example/**
+!assets/books/isomorphism-mathematics-of-programming/**
