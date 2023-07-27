@@ -1,6 +1,6 @@
 import { Router, RouterContext } from 'https://deno.land/x/oak@v12.4.0/mod.ts';
 import {
-  requestChapterQuestion,
+  requestChapterQuestions,
   requestGrade,
   requestHint,
   requestQuestionList,
@@ -47,8 +47,8 @@ router.post('/hint', async (ctx) => {
   await requestGpt('/hint', requestHint, ctx);
 });
 
-router.post('/chapter-question', async (ctx) => {
-  await requestGpt('/hint', requestChapterQuestion, ctx);
+router.post('/chapter-questions', async (ctx) => {
+  await requestGpt('/chapter-questions', requestChapterQuestions, ctx);
 });
 
 router.get('/bookshelf', async (ctx) => {

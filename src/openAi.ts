@@ -127,17 +127,42 @@ const chapterSchema = z.object({
 
 type ChapterSchema = z.infer<typeof chapterSchema>;
 
-export const requestChapterQuestion = async (body: unknown) => {
+function chunk(text: string, size: number) {
+  const chunks = [];
+  for (let i = size / 2; i < text.length - size / 2; i += size / 2) {
+    chunks.push(
+      text.substring(
+        Math.max(0, i - size / 2),
+        Math.min(text.length, i + size / 2)
+      )
+    );
+  }
+  return chunks;
+}
+
+export const requestChapterQuestions = async (body: unknown) => {
   const parsed = chapterSchema.safeParse(body);
 
   if (!parsed.success) {
     console.error(parsed.error);
     return null;
   }
-  parsed.data.text = await Deno.readTextFile(
-    `./assets/books/${parsed.data.book}/${parsed.data.chapter}`
-  );
 
+  try {
+    const chapterText = await Deno.readTextFile(
+      `./assets/books/${parsed.data.book}/${parsed.data.chapter}`
+    );
+    const texts = chunk(chapterText, 2000);
+    if (!texts) return null;
+    return Promise.all(
+      texts.map((text) => requestChapterQuestion({ ...parsed.data, text }))
+    );
+  } catch {
+    return null;
+  }
+};
+
+const requestChapterQuestion = async (chapter: ChapterSchema) => {
   const agent = gpt3(({ params }: { params: ChapterSchema }) => [
     system`You are a professor in ${
       params.subject
@@ -147,22 +172,22 @@ export const requestChapterQuestion = async (body: unknown) => {
     assistant`${gen('question', {
       maxTokens: 25,
     })}`,
-    system`State a correct answer to the question you provided, in one short sentence.`,
-    assistant`The correct answer is ${gen('correctChoice', { maxTokens: 10 })}`,
+    system`State a correct answer to the question you provided, in one short incomplete sentence.`,
+    assistant`${gen('correctChoice', { maxTokens: 10 })}`,
     system`State an incorrect answer to the question you provided.`,
-    assistant`An incorrect answer could be ${gen('choice2', {
+    assistant`${gen('choice2', {
       maxTokens: 10,
     })}`,
     system`State another incorrect answer to the question you provided.`,
-    assistant`An incorrect answer could be ${gen('choice3', {
+    assistant`${gen('choice3', {
       maxTokens: 10,
     })}`,
     system`State another incorrect answer to the question you provided.`,
-    assistant`An incorrect answer could be ${gen('choice4', {
+    assistant`${gen('choice4', {
       maxTokens: 10,
     })}`,
   ]);
-  const result = (await agent(parsed.data)) as {
+  const result = (await agent(chapter)) as {
     question: string;
     correctChoice: string;
     choice2: string;
@@ -171,7 +196,7 @@ export const requestChapterQuestion = async (body: unknown) => {
   };
   return {
     question: result.question,
-    options: [
+    choices: [
       result.correctChoice,
       result.choice2,
       result.choice3,
