@@ -129,13 +129,8 @@ type ChapterSchema = z.infer<typeof chapterSchema>;
 
 function chunk(text: string, size: number, max: number) {
   const chunks = [];
-  for (let i = size / 2; i < text.length - size / 2; i += size / 2) {
-    chunks.push(
-      text.substring(
-        Math.max(0, i - size / 2),
-        Math.min(text.length, i + size / 2)
-      )
-    );
+  for (let i = 0; i < text.length; i += size) {
+    chunks.push(text.substring(Math.max(0, i), i + size));
     if (chunks.length == max) {
       break;
     }
@@ -155,7 +150,11 @@ export const requestChapterQuestions = async (body: unknown) => {
     const chapterText = await Deno.readTextFile(
       `./assets/books/${parsed.data.book}/${parsed.data.chapter}`
     );
-    const texts = chunk(chapterText, 2000, 5);
+    const texts = chunk(
+      chapterText,
+      Math.max(2000, Math.ceil(chapterText.length / 10)),
+      10
+    );
     return Promise.all(
       texts.map((text) => requestChapterQuestion({ ...parsed.data, text }))
     );
@@ -198,6 +197,7 @@ const requestChapterQuestion = async (chapter: ChapterSchema) => {
   };
   return {
     // id: crypto.randomUUID(),
+    source: chapter.text,
     question: result.question,
     choices: [
       result.correctChoice,
