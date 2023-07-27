@@ -66,7 +66,7 @@ router.get('/book/:book', async (ctx) => {
   for await (const chapter of Deno.readDir(`./assets/books/${book}`)) {
     chapters.push(chapter.name);
   }
-  ctx.response.body = JSON.stringify({ chapters });
+  ctx.response.body = JSON.stringify({ chapters: chapters.sort(sortChapters) });
   return;
 });
 
@@ -78,3 +78,21 @@ router.get('/book/:book/chapter/:chapter', async (ctx) => {
   ctx.response.body = JSON.stringify({ text });
   return;
 });
+
+const sortChapters = (a: string, b: string) => {
+  const numA = a
+    .split(' ')[0]
+    .split('.')
+    .map((x) => parseInt(x));
+  const numB = b
+    .split(' ')[0]
+    .split('.')
+    .map((x) => parseInt(x));
+  for (let i = 0; i < Math.min(numA.length, numB.length); i++) {
+    if (numA[i] == numB[i]) {
+      continue;
+    }
+    return numA[i] - numB[i];
+  }
+  return numA.length - numB.length;
+};
