@@ -153,7 +153,7 @@ export const requestChapterQuestions = async (body: unknown) => {
     const texts = chunk(
       chapterText,
       Math.max(2000, Math.ceil(chapterText.length / 10)),
-      10
+      3
     );
     return Promise.all(
       texts.map((text) => requestChapterQuestion({ ...parsed.data, text }))
@@ -167,9 +167,13 @@ const requestChapterQuestion = async (chapter: ChapterSchema) => {
   const agent = gpt3(({ params }: { params: ChapterSchema }) => [
     system`You are a professor in ${
       params.subject
-    }. Create a single short question from the following chapter of ${
+    }. Write a short paragraph that conveys the same information as the following. Write it as an original paragraph, do not reference the original. ${
       params.book
     }. \n\n ${params.text ?? ''}`,
+    assistant`${gen('source', {
+      maxTokens: 200,
+    })}`,
+    system`Create one question from chapter. Do not make it too open-ended. Do not make it too easy.`,
     assistant`${gen('question', {
       maxTokens: 25,
     })}`,
@@ -189,6 +193,7 @@ const requestChapterQuestion = async (chapter: ChapterSchema) => {
     })}`,
   ]);
   const result = (await agent(chapter)) as {
+    source: string;
     question: string;
     correctChoice: string;
     choice2: string;
@@ -197,7 +202,7 @@ const requestChapterQuestion = async (chapter: ChapterSchema) => {
   };
   return {
     // id: crypto.randomUUID(),
-    source: chapter.text,
+    source: result.source, // chapter.text,
     question: result.question,
     choices: [
       result.correctChoice,
