@@ -127,7 +127,7 @@ const chapterSchema = z.object({
 
 type ChapterSchema = z.infer<typeof chapterSchema>;
 
-function chunk(text: string, size: number) {
+function chunk(text: string, size: number, max: number) {
   const chunks = [];
   for (let i = size / 2; i < text.length - size / 2; i += size / 2) {
     chunks.push(
@@ -136,6 +136,9 @@ function chunk(text: string, size: number) {
         Math.min(text.length, i + size / 2)
       )
     );
+    if (chunks.length == max) {
+      break;
+    }
   }
   return chunks;
 }
@@ -152,8 +155,7 @@ export const requestChapterQuestions = async (body: unknown) => {
     const chapterText = await Deno.readTextFile(
       `./assets/books/${parsed.data.book}/${parsed.data.chapter}`
     );
-    const texts = chunk(chapterText, 2000);
-    if (!texts) return null;
+    const texts = chunk(chapterText, 2000, 5);
     return Promise.all(
       texts.map((text) => requestChapterQuestion({ ...parsed.data, text }))
     );
