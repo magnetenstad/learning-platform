@@ -7,6 +7,15 @@ import {
   system,
   createOpenAIChatCompletion,
 } from './salute/src/index.ts';
+import {
+  addBook,
+  addChapter,
+  addQuestion,
+  getBook,
+  getChapter,
+  getChapterContent,
+  getQuestions,
+} from './supabase.ts';
 
 config({ export: true });
 
@@ -146,18 +155,46 @@ export const requestChapterQuestions = async (body: unknown) => {
     return null;
   }
 
+  const chapter = await getChapter(parsed.data.book, parsed.data.chapter);
+  if (chapter) {
+    console.log('Memoized!');
+    return getQuestions(chapter.id);
+  }
+  const book = await getBook(parsed.data.book);
+  const bookId = book ? book.id : await addBook({ name: parsed.data.book });
+  if (!bookId) {
+    console.error('No book');
+    return null;
+  }
+  const chapterId = await addChapter({
+    book_id: bookId,
+    name: parsed.data.chapter,
+  });
+  if (!chapterId) {
+    console.error('No chapter');
+    return null;
+  }
+
   try {
-    const chapterText = await Deno.readTextFile(
-      `./assets/books/${parsed.data.book}/${parsed.data.chapter}`
+    const chapterText = await getChapterContent(
+      parsed.data.book,
+      parsed.data.chapter
     );
+    if (!chapterText) {
+      return false;
+    }
     const texts = chunk(
       chapterText,
       Math.max(2000, Math.ceil(chapterText.length / 10)),
       3
     );
-    return Promise.all(
+    const questions = await Promise.all(
       texts.map((text) => requestChapterQuestion({ ...parsed.data, text }))
     );
+    questions.forEach((question) => {
+      addQuestion({ ...question, chapter_id: chapterId });
+    });
+    return questions;
   } catch {
     return null;
   }
@@ -201,7 +238,6 @@ const requestChapterQuestion = async (chapter: ChapterSchema) => {
     choice4: string;
   };
   return {
-    // id: crypto.randomUUID(),
     source: result.source, // chapter.text,
     question: result.question,
     choices: [

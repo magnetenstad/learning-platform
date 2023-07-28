@@ -5,6 +5,7 @@ import {
   requestHint,
   requestQuestionList,
 } from './openAi.ts';
+import { getBookNames, getChapterNames } from './supabase.ts';
 
 export const router = new Router();
 
@@ -52,22 +53,15 @@ router.post('/chapter-questions', async (ctx) => {
 });
 
 router.get('/bookshelf', async (ctx) => {
-  const books = [];
-  for await (const book of Deno.readDir('./assets/books')) {
-    books.push(book.name);
-  }
-  ctx.response.body = JSON.stringify({ books });
+  ctx.response.body = JSON.stringify({ books: await getBookNames() });
 });
 
 router.get('/book/:book', async (ctx) => {
-  const chapters = [];
   const book = ctx.params.book;
-
-  for await (const chapter of Deno.readDir(`./assets/books/${book}`)) {
-    chapters.push(chapter.name);
-  }
-  ctx.response.body = JSON.stringify({ chapters: chapters.sort(sortChapters) });
-  return;
+  const chapterNames = await getChapterNames(book);
+  ctx.response.body = JSON.stringify({
+    chapters: chapterNames.sort(sortChapters),
+  });
 });
 
 router.get('/book/:book/chapter/:chapter', async (ctx) => {
@@ -76,7 +70,6 @@ router.get('/book/:book/chapter/:chapter', async (ctx) => {
 
   const text = await Deno.readTextFile(`./assets/books/${book}/${chapter}`);
   ctx.response.body = JSON.stringify({ text });
-  return;
 });
 
 const sortChapters = (a: string, b: string) => {

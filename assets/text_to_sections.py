@@ -65,7 +65,7 @@ def section_contents_to_dir(section_names, contents, dirname):
 
     for key, section_name in section_names:
         cleaned_name = sub(r"[^A-Za-z0-9 ]", r"", section_name)
-        filename = f"{dirname}/{'.'.join([str(x) for x in key])} {cleaned_name}.md"
+        filename = f"{dirname}/{'.'.join([str(x) for x in key])} {cleaned_name}.txt"
         with open(filename, "w", encoding="utf-8") as file:
             file.write(f"# {key} {section_name}\n\n")
             file.write(contents[key])
