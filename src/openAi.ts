@@ -216,15 +216,15 @@ const requestChapterQuestion = async (chapter: ChapterSchema) => {
     })}`,
     system`State a correct answer to the question you provided, in one short incomplete sentence.`,
     assistant`${gen('correctChoice', { maxTokens: 10 })}`,
-    system`State an incorrect answer to the question you provided.`,
+    system`State an incorrect but believable answer to the question you provided.`,
     assistant`${gen('choice2', {
       maxTokens: 10,
     })}`,
-    system`State another incorrect answer to the question you provided.`,
+    system`State another incorrect but believable answer to the question you provided.`,
     assistant`${gen('choice3', {
       maxTokens: 10,
     })}`,
-    system`State another incorrect answer to the question you provided.`,
+    system`State another incorrect but believable answer to the question you provided.`,
     assistant`${gen('choice4', {
       maxTokens: 10,
     })}`,
