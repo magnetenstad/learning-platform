@@ -185,7 +185,7 @@ export const requestChapterQuestions = async (body: unknown) => {
     }
     const texts = chunk(
       chapterText,
-      Math.max(2000, Math.ceil(chapterText.length / 10)),
+      Math.min(Math.max(2000, Math.ceil(chapterText.length / 3)), 10000),
       3
     );
     const questions = await Promise.all(

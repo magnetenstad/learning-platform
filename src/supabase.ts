@@ -1,5 +1,5 @@
 import { config } from 'https://deno.land/x/dotenv@v3.2.2/mod.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.31.0';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.36.0';
 import { Database } from './types/supabase.ts';
 
 config({ export: true });
@@ -8,6 +8,7 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.error('Invalid environment');
   Deno.exit();
 }
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
