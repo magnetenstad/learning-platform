@@ -89,3 +89,16 @@ const sortChapters = (a: string, b: string) => {
   }
   return numA.length - numB.length;
 };
+
+router.get('/wiki/:search', async (ctx) => {
+  const url = 'https://en.wikipedia.org/w/api.php';
+  const params = new URLSearchParams({
+    action: 'query',
+    list: 'search',
+    srsearch: ctx.params.search,
+    format: 'json',
+  });
+
+  const json = await (await fetch(`${url}?${params}`)).json();
+  ctx.response.body = JSON.stringify(json);
+});
