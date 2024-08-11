@@ -1,11 +1,11 @@
-import { z } from 'https://deno.land/x/zod@v3.16.1/mod.ts';
 import { config } from 'https://deno.land/x/dotenv@v3.2.2/mod.ts';
+import { z } from 'https://deno.land/x/zod@v3.16.1/mod.ts';
 import {
-  user,
   assistant,
+  createOpenAIChatCompletion,
   gen,
   system,
-  createOpenAIChatCompletion,
+  user,
 } from './salute/src/index.ts';
 import {
   addBook,
@@ -80,13 +80,11 @@ export const requestQuestionList = async (body: unknown) => {
       maxTokens,
     })}\n3) ${gen('3', { maxTokens })}\n4) ${gen('4', {
       maxTokens,
-    })}\n5) ${gen('5', { maxTokens })}\n6) ${gen('6', { maxTokens })}\n7) ${gen(
-      '7',
-      { maxTokens }
-    )}\n8) ${gen('8', { maxTokens })}\n9) ${gen('9', { maxTokens })}\n10) ${gen(
-      '10',
-      { maxTokens }
-    )}`,
+    })}\n5) ${gen('5', { maxTokens })}\n6) ${gen('6', {
+      maxTokens,
+    })}\n7) ${gen('7', { maxTokens })}\n8) ${gen('8', {
+      maxTokens,
+    })}\n9) ${gen('9', { maxTokens })}\n10) ${gen('10', { maxTokens })}`,
   ]);
   return (await agent(parsed.data)) as {
     1: string;
